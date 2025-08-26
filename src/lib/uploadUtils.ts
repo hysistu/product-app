@@ -7,7 +7,7 @@ export interface UploadData {
 /**
  * Convert form data to FormData for file uploads
  */
-export const createFormData = (data: any, token?: string): FormData => {
+export const createFormData = (data: UploadData, token?: string): FormData => {
   const formData = new FormData();
 
   // Append each field
@@ -41,7 +41,7 @@ export const submitWithUpload = async (
   // Check if there are any files to upload
   const hasFiles = Object.values(data).some((value) => value instanceof File);
 
-  let headers: HeadersInit = {};
+  const headers: HeadersInit = {};
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -52,7 +52,7 @@ export const submitWithUpload = async (
 
     console.log("Sending FormData with headers:", headers);
     console.log("FormData contents:");
-    for (let [key, value] of formData.entries()) {
+    for (const [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
     }
 
@@ -76,14 +76,14 @@ export const submitWithUpload = async (
 /**
  * Check if a value is a File object
  */
-export const isFile = (value: any): value is File => {
+export const isFile = (value: unknown): value is File => {
   return value instanceof File;
 };
 
 /**
  * Check if a value is a URL string
  */
-export const isUrl = (value: any): value is string => {
+export const isUrl = (value: unknown): value is string => {
   return (
     typeof value === "string" &&
     (value.startsWith("http://") ||

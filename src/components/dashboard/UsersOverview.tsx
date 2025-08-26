@@ -10,7 +10,7 @@ interface User {
 }
 
 interface UsersOverviewProps {
-  data: any;
+  data: unknown;
 }
 
 const UsersOverview: React.FC<UsersOverviewProps> = ({ data }) => {
@@ -21,18 +21,28 @@ const UsersOverview: React.FC<UsersOverviewProps> = ({ data }) => {
     regularUsers: 0,
   });
 
+  const isDataArray = (v: unknown): v is { data: User[] } =>
+    typeof v === "object" &&
+    v !== null &&
+    "data" in v &&
+    Array.isArray((v as { data: unknown }).data);
+
+  const isUsersProp = (v: unknown): v is { users: User[] } =>
+    typeof v === "object" &&
+    v !== null &&
+    "users" in v &&
+    Array.isArray((v as { users: unknown }).users);
+
   useEffect(() => {
     // Handle different possible data structures
     let usersArray: User[] = [];
 
-    if (data && typeof data === "object") {
-      if (data.data && Array.isArray(data.data)) {
-        usersArray = data.data;
-      } else if (Array.isArray(data)) {
-        usersArray = data;
-      } else if (data.users && Array.isArray(data.users)) {
-        usersArray = data.users;
-      }
+    if (Array.isArray(data)) {
+      usersArray = data;
+    } else if (isDataArray(data)) {
+      usersArray = data.data;
+    } else if (isUsersProp(data)) {
+      usersArray = data.users;
     }
 
     setUsers(usersArray);

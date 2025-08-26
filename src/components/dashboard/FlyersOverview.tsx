@@ -35,7 +35,7 @@ interface Flyer {
 }
 
 interface FlyersOverviewProps {
-  data: any;
+  data: unknown;
 }
 
 const FlyersOverview: React.FC<FlyersOverviewProps> = ({ data }) => {
@@ -48,20 +48,39 @@ const FlyersOverview: React.FC<FlyersOverviewProps> = ({ data }) => {
     activeFlyers: 0,
   });
 
+  const isDataWithFlyers = (v: unknown): v is { data: { flyers: Flyer[] } } =>
+    typeof v === "object" &&
+    v !== null &&
+    "data" in v &&
+    typeof (v as { data: unknown }).data === "object" &&
+    (v as { data: unknown }).data !== null &&
+    "flyers" in (v as { data: Record<string, unknown> }).data &&
+    Array.isArray((v as { data: { flyers: unknown } }).data.flyers);
+
+  const isFlyersProp = (v: unknown): v is { flyers: Flyer[] } =>
+    typeof v === "object" &&
+    v !== null &&
+    "flyers" in v &&
+    Array.isArray((v as { flyers: unknown }).flyers);
+
+  const isDataArray = (v: unknown): v is { data: Flyer[] } =>
+    typeof v === "object" &&
+    v !== null &&
+    "data" in v &&
+    Array.isArray((v as { data: unknown }).data);
+
   useEffect(() => {
     // Handle different possible data structures
     let flyersArray: Flyer[] = [];
 
-    if (data && typeof data === "object") {
-      if (data.data && data.data.flyers && Array.isArray(data.data.flyers)) {
-        flyersArray = data.data.flyers;
-      } else if (data.flyers && Array.isArray(data.flyers)) {
-        flyersArray = data.flyers;
-      } else if (data.data && Array.isArray(data.data)) {
-        flyersArray = data.data;
-      } else if (Array.isArray(data)) {
-        flyersArray = data;
-      }
+    if (Array.isArray(data)) {
+      flyersArray = data;
+    } else if (isDataWithFlyers(data)) {
+      flyersArray = data.data.flyers;
+    } else if (isFlyersProp(data)) {
+      flyersArray = data.flyers;
+    } else if (isDataArray(data)) {
+      flyersArray = data.data;
     }
 
     setFlyersArray(flyersArray);

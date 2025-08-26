@@ -23,7 +23,7 @@ interface Product {
 }
 
 interface ProductsAnalyticsProps {
-  data: any;
+  data: unknown;
 }
 
 const ProductsAnalytics: React.FC<ProductsAnalyticsProps> = ({ data }) => {
@@ -38,22 +38,41 @@ const ProductsAnalytics: React.FC<ProductsAnalyticsProps> = ({ data }) => {
     },
   });
 
+  const isDataWithProducts = (
+    v: unknown
+  ): v is { data: { products: Product[] } } =>
+    typeof v === "object" &&
+    v !== null &&
+    "data" in v &&
+    typeof (v as { data: unknown }).data === "object" &&
+    (v as { data: unknown }).data !== null &&
+    "products" in (v as { data: Record<string, unknown> }).data &&
+    Array.isArray((v as { data: { products: unknown } }).data.products);
+
+  const isProductsProp = (v: unknown): v is { products: Product[] } =>
+    typeof v === "object" &&
+    v !== null &&
+    "products" in v &&
+    Array.isArray((v as { products: unknown }).products);
+
+  const isDataArray = (v: unknown): v is { data: Product[] } =>
+    typeof v === "object" &&
+    v !== null &&
+    "data" in v &&
+    Array.isArray((v as { data: unknown }).data);
+
   useEffect(() => {
     // Handle different possible data structures
     let productsArray: Product[] = [];
 
-    if (data && typeof data === "object") {
-      if (
-        data.data &&
-        data.data.products &&
-        Array.isArray(data.data.products)
-      ) {
-        productsArray = data.data.products;
-      } else if (Array.isArray(data)) {
-        productsArray = data;
-      } else if (data.products && Array.isArray(data.products)) {
-        productsArray = data.products;
-      }
+    if (Array.isArray(data)) {
+      productsArray = data;
+    } else if (isDataWithProducts(data)) {
+      productsArray = data.data.products;
+    } else if (isProductsProp(data)) {
+      productsArray = data.products;
+    } else if (isDataArray(data)) {
+      productsArray = data.data;
     }
 
     setProducts(productsArray);

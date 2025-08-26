@@ -93,7 +93,7 @@ export const productAPI = {
     productFlyer?: string;
     pageNumber?: number;
     tags?: string[];
-    specifications?: Record<string, any>;
+    specifications?: Record<string, unknown>;
   }) => api.post("/products", data),
 
   // Update product
@@ -111,7 +111,7 @@ export const productAPI = {
       productFlyer?: string;
       pageNumber?: number;
       tags?: string[];
-      specifications?: Record<string, any>;
+      specifications?: Record<string, unknown>;
     }
   ) => api.put(`/products/${id}`, data),
 

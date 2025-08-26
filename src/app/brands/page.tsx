@@ -4,11 +4,7 @@ import React, { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ImageUpload from "@/components/ImageUpload";
-import {
-  submitWithUpload,
-  createFormData,
-  getImageUrl,
-} from "@/lib/uploadUtils";
+import { submitWithUpload, getImageUrl } from "@/lib/uploadUtils";
 
 interface Brand {
   _id: string;
@@ -121,10 +117,26 @@ export default function BrandsPage() {
         const error = await response.json();
         console.error("Backend error:", error);
         console.error("Error details:", error.details);
-        if (error.details && Array.isArray(error.details)) {
-          error.details.forEach((detail: any) => {
+        if (
+          error &&
+          typeof error === "object" &&
+          "details" in error &&
+          Array.isArray((error as { details?: unknown }).details)
+        ) {
+          const details = (
+            error as {
+              details?: Array<{
+                field?: string;
+                message?: string;
+                value?: unknown;
+              }>;
+            }
+          ).details;
+          details?.forEach((detail) => {
             console.error(
-              `Field: ${detail.field}, Message: ${detail.message}, Value: ${detail.value}`
+              `Field: ${detail.field}, Message: ${
+                detail.message
+              }, Value: ${String(detail.value)}`
             );
           });
         }

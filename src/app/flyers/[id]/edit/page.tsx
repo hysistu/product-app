@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -8,6 +8,7 @@ import { productFlyerAPI, categoryAPI, brandAPI } from "@/lib/api";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import type { Resolver } from "react-hook-form";
 
 const flyerSchema = yup.object({
   title: yup
@@ -28,13 +29,27 @@ const flyerSchema = yup.object({
 
 type FlyerFormData = yup.InferType<typeof flyerSchema>;
 
+interface Flyer {
+  title: string;
+  description?: string;
+  coverImage: string;
+  category: { _id: string };
+  brand: { _id: string };
+  publishDate?: string;
+  expiryDate?: string;
+}
+
+type ApiError = {
+  response?: { data?: { message?: string } };
+};
+
 export default function EditFlyerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [flyerLoading, setFlyerLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [brandsLoading, setBrandsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [flyer, setFlyer] = useState<any>(null);
+  const [flyer, setFlyer] = useState<Flyer | null>(null);
   const [categories, setCategories] = useState<
     Array<{ _id: string; name: string }>
   >([]);
@@ -52,22 +67,14 @@ export default function EditFlyerPage() {
     reset,
     setValue,
   } = useForm<FlyerFormData>({
-    resolver: yupResolver(flyerSchema) as any,
+    resolver: yupResolver(flyerSchema) as Resolver<FlyerFormData>,
   });
 
-  useEffect(() => {
-    if (flyerId) {
-      fetchFlyer();
-      fetchCategories();
-      fetchBrands();
-    }
-  }, [flyerId]);
-
-  const fetchFlyer = async () => {
+  const fetchFlyer = useCallback(async () => {
     try {
       setFlyerLoading(true);
       const response = await productFlyerAPI.getFlyerById(flyerId);
-      const flyerData = response.data.data.flyer;
+      const flyerData: Flyer = response.data.data.flyer;
       setFlyer(flyerData);
 
       // Set form values
@@ -83,14 +90,16 @@ export default function EditFlyerPage() {
       if (flyerData.expiryDate) {
         setValue("expiryDate", new Date(flyerData.expiryDate));
       }
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to fetch flyer");
+    } catch (error: unknown) {
+      const message =
+        (error as ApiError)?.response?.data?.message || "Failed to fetch flyer";
+      setError(message);
     } finally {
       setFlyerLoading(false);
     }
-  };
+  }, [flyerId, setValue]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       setCategoriesLoading(true);
       const response = await categoryAPI.getCategories();
@@ -100,9 +109,9 @@ export default function EditFlyerPage() {
     } finally {
       setCategoriesLoading(false);
     }
-  };
+  }, []);
 
-  const fetchBrands = async () => {
+  const fetchBrands = useCallback(async () => {
     try {
       setBrandsLoading(true);
       const response = await brandAPI.getActiveBrands();
@@ -112,7 +121,15 @@ export default function EditFlyerPage() {
     } finally {
       setBrandsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (flyerId) {
+      fetchFlyer();
+      fetchCategories();
+      fetchBrands();
+    }
+  }, [flyerId, fetchFlyer, fetchCategories, fetchBrands]);
 
   const onSubmit = async (data: FlyerFormData) => {
     setIsLoading(true);
@@ -130,8 +147,10 @@ export default function EditFlyerPage() {
 
       await productFlyerAPI.updateFlyer(flyerId, apiData);
       router.push(`/flyers/${flyerId}`);
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to update flyer");
+    } catch (err: unknown) {
+      const message =
+        (err as ApiError)?.response?.data?.message || "Failed to update flyer";
+      setError(message);
     } finally {
       setIsLoading(false);
     }

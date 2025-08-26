@@ -9,14 +9,31 @@ import UsersOverview from "@/components/dashboard/UsersOverview";
 import DashboardLayout from "@/components/DashboardLayout";
 import React, { useState, useEffect } from "react";
 
+interface MetricsSummary {
+  totalFlyers?: number;
+  totalProducts?: number;
+  totalUsers?: number;
+  totalCategories?: number;
+  totalBrands?: number;
+  publishedFlyers?: number;
+}
+
+interface ActivityItem {
+  id: string;
+  type: string;
+  message: string;
+  user: string;
+  timestamp: string;
+}
+
 interface DashboardData {
-  metrics: any;
-  flyers: any;
-  products: any;
-  categories: any;
-  brands: any;
-  users: any;
-  recentActivity: any[];
+  metrics: MetricsSummary | Record<string, unknown>;
+  flyers: unknown;
+  products: unknown;
+  categories: unknown;
+  brands: unknown;
+  users: unknown;
+  recentActivity: ActivityItem[];
 }
 
 export default function Dashboard() {

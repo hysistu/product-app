@@ -81,8 +81,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       localStorage.setItem("token", newToken);
       localStorage.setItem("user", JSON.stringify(userData));
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Login failed");
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } }).response?.data
+          ?.message || "Login failed";
+      throw new Error(message);
     }
   };
 
@@ -106,8 +109,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       localStorage.setItem("token", newToken);
       localStorage.setItem("user", JSON.stringify(userData));
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Registration failed");
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } }).response?.data
+          ?.message || "Registration failed";
+      throw new Error(message);
     }
   };
 

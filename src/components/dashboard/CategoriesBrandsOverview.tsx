@@ -26,8 +26,8 @@ interface Brand {
 }
 
 interface CategoriesBrandsOverviewProps {
-  categories: any;
-  brands: any;
+  categories: unknown;
+  brands: unknown;
 }
 
 const CategoriesBrandsOverview: React.FC<CategoriesBrandsOverviewProps> = ({
@@ -40,29 +40,32 @@ const CategoriesBrandsOverview: React.FC<CategoriesBrandsOverviewProps> = ({
   useEffect(() => {
     // Handle different possible data structures for categories
     let categoriesArray: Category[] = [];
-    if (categories && typeof categories === "object") {
-      if (categories.data && Array.isArray(categories.data)) {
+    if (Array.isArray(categories)) {
+      categoriesArray = categories;
+    } else if (categories && typeof categories === "object") {
+      if ("data" in categories && Array.isArray(categories.data)) {
         categoriesArray = categories.data;
-      } else if (Array.isArray(categories)) {
-        categoriesArray = categories;
       } else if (
-        categories.categories &&
-        Array.isArray(categories.categories)
+        "categories" in categories &&
+        Array.isArray((categories as { categories: unknown }).categories)
       ) {
-        categoriesArray = categories.categories;
+        categoriesArray = (categories as { categories: Category[] }).categories;
       }
     }
     setCategoriesList(categoriesArray);
 
     // Handle different possible data structures for brands
     let brandsArray: Brand[] = [];
-    if (brands && typeof brands === "object") {
-      if (brands.data && Array.isArray(brands.data)) {
+    if (Array.isArray(brands)) {
+      brandsArray = brands;
+    } else if (brands && typeof brands === "object") {
+      if ("data" in brands && Array.isArray(brands.data)) {
         brandsArray = brands.data;
-      } else if (Array.isArray(brands)) {
-        brandsArray = brands;
-      } else if (brands.brands && Array.isArray(brands.brands)) {
-        brandsArray = brands.brands;
+      } else if (
+        "brands" in brands &&
+        Array.isArray((brands as { brands: unknown }).brands)
+      ) {
+        brandsArray = (brands as { brands: Brand[] }).brands;
       }
     }
     setBrandsList(brandsArray);

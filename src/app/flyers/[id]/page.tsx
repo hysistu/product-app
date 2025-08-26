@@ -277,7 +277,7 @@ const ProductPage = React.forwardRef(
       onImageClick: (product: Product) => void;
       getImageUrl: (imagePath: string) => string;
     },
-    ref: any
+    ref: React.ForwardedRef<HTMLDivElement>
   ) => {
     const handlePageClick = (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -466,7 +466,15 @@ export default function FlyerDisplayPage() {
   const params = useParams();
   const router = useRouter();
   const flyerId = params.id as string;
-  const bookRef = useRef<any>(null);
+  type PageFlipApi = {
+    flipNext: (corner?: string) => void;
+    flipPrev: (corner?: string) => void;
+    flip: (page: number, corner?: string) => void;
+  };
+  type FlipBookRef = {
+    pageFlip: () => PageFlipApi;
+  };
+  const bookRef = useRef<FlipBookRef | null>(null);
   const [flyer, setFlyer] = useState<Flyer | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -477,13 +485,7 @@ export default function FlyerDisplayPage() {
 
   // Import getImageUrl from uploadUtils to avoid CORS issues
 
-  useEffect(() => {
-    if (flyerId) {
-      fetchFlyerProducts();
-    }
-  }, [flyerId]);
-
-  const fetchFlyerProducts = async () => {
+  const fetchFlyerProducts = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -565,9 +567,15 @@ export default function FlyerDisplayPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [flyerId]);
 
-  const onFlip = useCallback((e: any) => {
+  useEffect(() => {
+    if (flyerId) {
+      fetchFlyerProducts();
+    }
+  }, [flyerId, fetchFlyerProducts]);
+
+  const onFlip = useCallback((e: { data: number }) => {
     setCurrentPage(e.data);
   }, []);
 
@@ -600,15 +608,7 @@ export default function FlyerDisplayPage() {
     setSelectedProduct(null);
   };
 
-  // Handle click events on the flipbook to prevent interference
-  const handleFlipbookClick = (e: React.MouseEvent) => {
-    // Check if the clicked element is an image or its container
-    const target = e.target as HTMLElement;
-    if (target.closest(".product-image-container")) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-  };
+  // (removed unused handleFlipbookClick)
 
   const handlePublishToggle = async () => {
     if (!flyer) return;
@@ -871,7 +871,7 @@ export default function FlyerDisplayPage() {
                   Asnjë Produkt i Shtuar Ende
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  This flyer doesn't have any products yet. Add products to
+                  This flyer doesn&apos;t have any products yet. Add products to
                   start building your catalog.
                 </p>
                 <Link
